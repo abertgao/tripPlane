@@ -10,10 +10,10 @@
 | 共享目录 | `/home/ubuntu/projects/tripPlane` |
 | 共享分支 | `main` |
 | 共享测试地址 | http://62.234.178.115:8802/ |
-| 你的测试目录 | `/home/ubuntu/projects/tripPlane-me` |
-| 你的分支 / 端口 | `dev/me` · http://62.234.178.115:8803/ |
-| 朋友的测试目录 | `/home/ubuntu/projects/tripPlane-friend` |
-| 朋友的分支 / 端口 | `dev/friend` · http://62.234.178.115:8804/ |
+| abert 的测试目录 | `/home/ubuntu/projects/tripPlane-abert` |
+| abert 的分支 / 端口 | `abert` · http://62.234.178.115:8803/ |
+| sofia 的测试目录 | `/home/ubuntu/projects/tripPlane-sofia` |
+| sofia 的分支 / 端口 | `sofia` · http://62.234.178.115:8804/ |
 
 三份目录是同一个仓库的三个工作区。共享目录保持 `main`，用来看合并后的结果。个人改动写在自己的目录和分支里，推上去再合并进 `main`。
 
