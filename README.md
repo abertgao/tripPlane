@@ -7,13 +7,17 @@
 | 项 | 值 |
 |---|---|
 | GitHub | `git@github.com:abertgao/tripPlane.git` |
-| 分支 | `main` |
-| 服务器目录 | `/home/ubuntu/projects/tripPlane` |
-| 测试地址 | http://62.234.178.115:8802/ |
+| 共享目录 | `/home/ubuntu/projects/tripPlane` |
+| 共享分支 | `main` |
+| 共享测试地址 | http://62.234.178.115:8802/ |
+| 你的测试目录 | `/home/ubuntu/projects/tripPlane-me` |
+| 你的分支 / 端口 | `dev/me` · http://62.234.178.115:8803/ |
+| 朋友的测试目录 | `/home/ubuntu/projects/tripPlane-friend` |
+| 朋友的分支 / 端口 | `dev/friend` · http://62.234.178.115:8804/ |
 
-在这台机器上改代码，直接进入上面的目录。不要把仓库克隆到别的路径再开一份服务，8802 只给这一份用。
+三份目录是同一个仓库的三个工作区。共享目录保持 `main`，用来看合并后的结果。个人改动写在自己的目录和分支里，推上去再合并进 `main`。
 
-公网只开放 **http** 的 8802 端口。写成 https，或省略端口，都打不开这个站。
+8802、8803、8804 都只用 **http**。安全组需要分别放行，省略端口或写成 https 都打不开。
 
 ## 本机启动
 
