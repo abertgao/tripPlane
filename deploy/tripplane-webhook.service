@@ -1,0 +1,16 @@
+[Unit]
+Description=tripPlane GitHub push hook
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/projects/tripPlane
+ExecStart=/usr/bin/python3 /home/ubuntu/projects/tripPlane/scripts/github-webhook.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

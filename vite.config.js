@@ -9,4 +9,10 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
   },
+  preview: {
+    host: "127.0.0.1",
+    port: 8812,
+    strictPort: true,
+    allowedHosts: true,
+  },
 });

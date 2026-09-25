@@ -19,17 +19,31 @@
 
 8802、8803、8804 都只用 **http**。安全组需要分别放行，省略端口或写成 https 都打不开。
 
-## 本机启动
+## 自动发布
+
+GitHub 在 `main` 或 `master` 被推送时，会调用 http://62.234.178.115:8802/hooks/github 。服务器校验签名后拉取对应分支，构建并发布到 http://62.234.178.115:8802/ 。
+
+当前仓库的共享分支是 `main`。abert、sofia 的推送不会发布，只有合并进 `main` 或 `master` 才会。
+
+共享目录里不要手改文件。这里如果有未提交改动，或本地提交还没推送，这次发布会跳过，避免把正在写的内容盖掉。
+
+手动发布：
+
+```bash
+bash /home/ubuntu/projects/tripPlane/scripts/pull-and-deploy.sh
+```
+
+## 个人目录启动
 
 需要 Node 22（这台机器在 `/home/ubuntu/.nvm/versions/node/v22.22.3/bin`）。
 
 ```bash
-cd /home/ubuntu/projects/tripPlane
+cd /home/ubuntu/projects/tripPlane-abert   # 或 tripPlane-sofia
 npm install
 npm run dev
 ```
 
-开发服务监听 `0.0.0.0:8802`。改完 `src/` 后刷新页面即可。
+改完自己目录里的 `src/` 后，刷新对应端口即可。
 
 ## 目录
 
