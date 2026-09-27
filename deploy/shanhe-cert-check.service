@@ -1,0 +1,10 @@
+[Unit]
+Description=Check served Shanhe IP certificate and 48-hour expiry threshold
+After=network-online.target nginx.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -c "import ssl,socket,datetime; c=ssl.create_default_context(); s=c.wrap_socket(socket.create_connection(('62.234.178.115',443),timeout=15),server_hostname='62.234.178.115'); cert=s.getpeercert(); seconds=ssl.cert_time_to_seconds(cert['notAfter'])-datetime.datetime.now(datetime.timezone.utc).timestamp(); s.close(); print('Certificate remaining hours:',round(seconds/3600,1)); assert seconds>172800,'Certificate expires within 48 hours'"
+NoNewPrivileges=true
+PrivateTmp=true

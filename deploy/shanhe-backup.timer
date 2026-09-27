@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup Shanhe personal journeys daily
+
+[Timer]
+OnCalendar=*-*-* 03:20:00
+Persistent=true
+Unit=shanhe-backup.service
+
+[Install]
+WantedBy=timers.target

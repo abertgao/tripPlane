@@ -14,5 +14,11 @@ export default defineConfig({
     port: 8812,
     strictPort: true,
     allowedHosts: true,
+    headers: {
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Content-Security-Policy": "frame-ancestors 'none'",
+    },
   },
 });

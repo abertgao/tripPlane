@@ -2,11 +2,18 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tripPlane · 行程</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#193c31" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'" />
+    <title>山河行记 · 在路上，遇见未完的故事</title>
+    <meta name="description" content="从关中到河套，一场随心而行的历史人文与自然探索。真实地点、故事任务、个人手记与AI随行助手。" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div id="app"></div>
+    <noscript><p>请启用 JavaScript 查看山河行记。旅程支持任务探索、本机存档与安全账号同步。</p></noscript>
+    <script type="module" src="/src/shanhe/main.tsx"></script>
   </body>
 </html>

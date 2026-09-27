@@ -1,0 +1,16 @@
+[Unit]
+Description=Create consistent Shanhe SQLite backup
+After=tripplane-api.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/projects/tripPlane
+EnvironmentFile=/etc/tripplane/api.env
+ExecStart=/home/ubuntu/.nvm/versions/node/v22.22.3/bin/node server/manage.js backup
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/tripplane

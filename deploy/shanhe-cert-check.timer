@@ -1,0 +1,10 @@
+[Unit]
+Description=Monitor live Shanhe certificate every six hours
+
+[Timer]
+OnCalendar=*-*-* 00,06,12,18:40:00
+Persistent=true
+Unit=shanhe-cert-check.service
+
+[Install]
+WantedBy=timers.target

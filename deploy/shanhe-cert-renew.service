@@ -1,0 +1,8 @@
+[Unit]
+Description=Renew Shanhe short-lived IP certificate
+After=network-online.target nginx.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/shanhe-certbot/bin/certbot renew --config-dir /etc/letsencrypt-shanhe --work-dir /var/lib/letsencrypt-shanhe --logs-dir /var/log/letsencrypt-shanhe --quiet --deploy-hook "/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx"

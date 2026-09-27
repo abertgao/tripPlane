@@ -3,3 +3,14 @@ dist
 .DS_Store
 .deploy-lockhash
 .webhook-secret
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+.runtime/
+.backups/
+playwright-report/
+test-results/

@@ -45,6 +45,6 @@ if [[ "${BEHIND:-0}" -eq 0 ]]; then
 fi
 
 echo "$LOG_PREFIX updating $(git rev-parse --short "$LOCAL") → $(git rev-parse --short "$REMOTE_SHA") (behind $BEHIND)"
-git reset --hard "$REMOTE/$BRANCH"
+git merge --ff-only "$REMOTE/$BRANCH"
 bash "$ROOT/scripts/deploy-tripplane.sh"
 echo "$LOG_PREFIX done at $(date -Iseconds) → $(git rev-parse --short HEAD)"
