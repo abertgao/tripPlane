@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {places,quests,days,adventures,legacyQuests,guanzhongStoryIds} from '../shared/content.js'
+import {places,quests,days,adventures,legacyQuests,guanzhongStoryIds,autumnDays,autumnNewPlaceIds,autumnReusedPlaceIds} from '../shared/content.js'
 import {journeyStateSchema,journalExportSchema} from '../shared/schema.js'
 import {submitAnswer,canOpenQuest,nextQuestForPlace} from '../shared/progress.js'
 test('11天内容引用完整，任务行动唯一，剧情不依赖秦直道',()=>{
@@ -12,9 +12,9 @@ test('11天内容引用完整，任务行动唯一，剧情不依赖秦直道',(
  for(const p of places){if(p.sourceUrl)assert.ok(['http:','https:'].includes(new URL(p.sourceUrl).protocol));if(!p.verified)assert.equal(p.address,'')}
 })
 test('全部地点有独立主线、路线与三章递进，旧ID不被复用',()=>{
- assert.equal(places.length,28)
- assert.equal(quests.length,84)
- assert.equal(quests.flatMap(q=>q.actions).length,261)
+ assert.equal(places.length,32)
+ assert.equal(quests.length,96)
+ assert.equal(quests.flatMap(q=>q.actions).length,309)
  assert.deepEqual(new Set(Object.keys(adventures)),new Set(places.map(p=>p.id)))
  assert.equal(new Set(Object.values(adventures).map(a=>a.title)).size,places.length)
  const oldIds=new Set(legacyQuests.flatMap(q=>q.actions.map(a=>a.id)))
@@ -59,11 +59,64 @@ test('关中四地单独可发现，三个新增点有导航来源与十二行�
  assert.match(adventures.yide.safety,/原件、复制和图版/)
  assert.match(adventures.qianling.scope,/不设地宫探访/)
 })
-test('原25地点225行动ID及次序冻结，新增故事只追加不占用原编号',()=>{
+test('原28地点261行动ID及次序冻结，新增故事只在尾部追加',()=>{
  const originalOrder=['yaozhou','maoling','xianling','yaowang','chenlu','jianling','liugongquan','huangling','loess','fuxian','wanfo','xuankong','shuofang','shimao','erlang','hongjiannao','ordos-road','yellowriver','yangshan','tanyaokou','gaoque','dajianhu','jilusai','aguimiao','canyon']
  const expected=originalOrder.flatMap(id=>[1,2,3].flatMap(chapter=>[1,2,3].map(action=>`${id}-v2-${chapter}-a${action}`)))
+ const guanzhong=['famensi','qianling','yide'].flatMap(id=>[1,2,3].flatMap(chapter=>[1,2,3,4].map(action=>`${id}-v2-${chapter}-a${action}`)))
  assert.deepEqual(quests.slice(0,75).flatMap(q=>q.actions.map(a=>a.id)),expected)
- assert.deepEqual([...new Set(quests.slice(75).map(q=>q.placeId))],['famensi','qianling','yide'])
+ assert.deepEqual(quests.slice(75,84).flatMap(q=>q.actions.map(a=>a.id)),guanzhong)
+ assert.deepEqual([...new Set(quests.slice(84).map(q=>q.placeId))],autumnNewPlaceIds)
+})
+test('固定日期与覆盖标签真实，不将市域候选、常规开放当作已预约路线',()=>{
+ assert.deepEqual(autumnNewPlaceIds,['tongchuan-museum','hukou','nanniwan-wetland','baotashan'])
+ assert.deepEqual(autumnReusedPlaceIds,['yaowang','yaozhou','huangling'])
+ assert.deepEqual(autumnDays.map(d=>d.date),['2026-09-30','2026-10-01','2026-10-02','2026-10-03'])
+ assert.deepEqual(autumnDays.map(d=>d.placeIds.length),[3,3,1,4])
+ for(const day of autumnDays){
+   assert.equal(day.labels.length,day.placeIds.length)
+   assert.equal(new Set(day.placeIds).size,day.placeIds.length)
+   for(const id of day.placeIds)assert.ok(places.some(p=>p.id===id))
+   for(const key of ['route','budget','warning'])assert.ok(day[key].length>20)
+ }
+ assert.match(autumnDays[0].warning,/09:00/);assert.match(autumnDays[0].warning,/16:30/)
+ assert.match(autumnDays[1].warning,/高负荷/);assert.match(autumnDays[1].warning,/取消南泥湾/)
+ assert.match(autumnDays[2].warning,/未新增/);assert.match(autumnDays[2].warning,/不等于/)
+ assert.match(autumnDays[3].warning,/不自动安排出城/)
+ assert.equal(places.find(p=>p.id==='yaowang').name,'药王山')
+ assert.equal(places.find(p=>p.id==='huangling').name,'黄帝陵')
+ assert.equal(places.find(p=>p.id==='shuofang').address,'')
+ for(const id of [...autumnNewPlaceIds,...autumnReusedPlaceIds]){
+   const p=places.find(p=>p.id===id)
+   assert.ok(p.sourceUrl);assert.ok(p.address);assert.equal(p.sourceCheckedAt,'2026-09-28')
+   assert.equal(places.filter(other=>other.id===id).length,1)
+   assert.deepEqual(quests.filter(q=>q.placeId===id).map(q=>q.actions.length),autumnNewPlaceIds.includes(id)?[4,4,4]:[3,3,3])
+ }
+ assert.match(places.find(p=>p.id==='hukou').address,/陕西省延安市宜川县/)
+ assert.match(adventures['nanniwan-wetland'].scope,/仅/);assert.match(adventures.baotashan.scope,/仅/)
+ assert.equal(days.length,11)
+})
+test('已有铜川黄陵三站每种回答前缀可继续，新地点不变成旧进度门槛',()=>{
+ const at='2026-09-27T12:00:00.000Z'
+ for(const id of autumnReusedPlaceIds)for(let count=0;count<=9;count++){
+   const ids=[1,2,3].flatMap(chapter=>[1,2,3].map(action=>`${id}-v2-${chapter}-a${action}`))
+   const answers=ids.slice(0,count).map(actionId=>({actionId,text:'保留原有核名、观察或取舍记录',mode:'uncertain',submittedAt:at}))
+   const before={schemaVersion:2,contentVersion:'shanhe-2026-v2',name:'旧旅程兼容',startDate:'2026-09-27',days:11,selectedPlaceIds:[id],skippedPlaceIds:[],completedActionIds:ids.slice(0,count),actionAnswers:answers,legacyCompletedActionIds:[],notes:[],activeQuestId:`${id}-v2-${Math.min(3,Math.floor(count/3)+1)}`,ended:false,updatedAt:at}
+   const state=journeyStateSchema.parse(before)
+   assert.deepEqual(state,before)
+   assert.deepEqual(journalExportSchema.parse({format:'shanhe-journal',version:1,exportedAt:at,state}).state,before)
+   assert.equal(canOpenQuest(state,`${id}-v2-2`),count>=3)
+   assert.equal(canOpenQuest(state,`${id}-v2-3`),count>=6)
+   if(count<9){const resumed=submitAnswer(state,ids[count],'继续原位置的记录','observed');assert.deepEqual(resumed.actionAnswers.slice(0,count),answers)}
+   else assert.equal(nextQuestForPlace(state,id),null)
+   for(const added of autumnNewPlaceIds){
+     assert.equal(canOpenQuest(state,`${added}-v2-1`),true)
+     assert.equal(canOpenQuest(state,`${added}-v2-2`),false)
+     const next=submitAnswer(state,`${added}-v2-1-a1`,'未到现场，先核公开资料','uncertain')
+     assert.deepEqual(next.actionAnswers.slice(0,count),answers)
+     assert.deepEqual(next.selectedPlaceIds,before.selectedPlaceIds)
+     assert.equal(next.startDate,before.startDate)
+   }
+ }
 })
 test('茂陵既有零至九条回答均可读取导出并从原位置继续，新地点不成为前置条件',()=>{
  const texts=['展牌名称已记在册','前缘的石形容易被裁去','伏地的轮廓显得沉稳','换角度后腿与身体连在一起','大片石面旁有细刻线','说明给了造型线索，侧面还不清楚','侧看改变了第一印象','背面未观察到','先看整体，再看细节']

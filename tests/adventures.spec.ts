@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test'
-import {adventures,places,quests,guanzhongStoryIds} from '../shared/content.js'
+import {adventures,places,quests,guanzhongStoryIds,autumnDays,autumnNewPlaceIds} from '../shared/content.js'
 
 test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block',launchOptions:{chromiumSandbox:true}})
 const base=process.env.SHANHE_TEST_URL||'http://127.0.0.1:8812'
@@ -12,6 +12,79 @@ test.beforeEach(async({context})=>{
     await route.continue()
   })
 })
+
+test('秋日日期专题保留覆盖边界、不自动收藏，搜索仍服从筛选范围',async({page})=>{
+  await page.goto(base)
+  await expect(page.getByRole('button',{name:'开启我的探索'})).toBeEnabled()
+  const getState=()=>page.evaluate(async()=>new Promise<any>((resolve,reject)=>{
+    const request=indexedDB.open('shanhe-journal-v1')
+    request.onerror=()=>reject(new Error('Test database unavailable'))
+    request.onsuccess=()=>{const db=request.result,transaction=db.transaction('journeys'),get=transaction.objectStore('journeys').get(localStorage.getItem('shanhe-active:guest')!);get.onsuccess=()=>resolve(get.result.state);transaction.oncomplete=()=>db.close();transaction.onerror=()=>reject(new Error('Test state unavailable'))}
+  }))
+  const before=await getState()
+  const section=page.getByRole('region',{name:'接下来四天的故事',exact:true})
+  await expect(section.locator('.autumn-day')).toHaveCount(4)
+  for(const day of autumnDays){
+    const daily=section.getByRole('region',{name:`${day.date}故事安排`})
+    await expect(daily.locator('.date-story')).toHaveCount(day.placeIds.length)
+    await expect(daily).toContainText(day.warning)
+  }
+  await section.getByRole('button',{name:'10/02',exact:true}).click()
+  expect(new URL(page.url()).hash).not.toBe('#autumn-2026-10-02')
+  await section.getByRole('button',{name:'展开2026-09-30的药王山',exact:true}).click()
+  const dialog=page.getByRole('dialog')
+  await expect(dialog.getByRole('heading',{name:'药王山',exact:true})).toBeVisible()
+  await expect(dialog).toContainText('本次地点已明确')
+  await dialog.getByRole('button',{name:'返回上一层'}).click()
+  expect(await getState()).toEqual(before)
+  await page.getByRole('navigation',{name:'移动端导航'}).getByRole('button',{name:'路线',exact:true}).click()
+  await expect(section).toBeVisible()
+  await page.getByRole('textbox',{name:'搜索地点'}).fill('第三只箱子')
+  await expect(section).toHaveCount(0)
+  await expect(page.getByRole('button',{name:'查看铜川博物馆的故事'})).toBeVisible()
+  await expect(page.locator('.place-card')).toHaveCount(1)
+  await page.getByLabel('筛选地区').selectOption('延安·宜川')
+  await expect(page.locator('.place-card')).toHaveCount(0)
+  await page.getByRole('textbox',{name:'搜索地点'}).fill('壶口')
+  await expect(page.getByRole('button',{name:'查看壶口瀑布（陕西侧）的故事'})).toBeVisible()
+  expect(await getState()).toEqual(before)
+})
+
+for(const id of autumnNewPlaceIds){
+  const place=places.find(p=>p.id===id)!,chapters=quests.filter(q=>q.placeId===id),day=autumnDays.find(d=>d.placeIds.includes(id))!
+  test(`秋日新增任务逐项提交、刷新及未确认结局：${place.name}`,async({page})=>{
+    test.setTimeout(60000)
+    await page.goto(base)
+    await expect(page.getByRole('button',{name:'开启我的探索'})).toBeEnabled()
+    await page.getByRole('button',{name:`展开${day.date}的${place.name}`,exact:true}).click()
+    const dialog=page.getByRole('dialog')
+    await expect(dialog.getByRole('button',{name:new RegExp(chapters[1].title)})).toBeDisabled()
+    await dialog.getByRole('button',{name:new RegExp(chapters[0].title)}).click()
+    for(const [ci,chapter] of chapters.entries()){
+      await expect(dialog.getByRole('heading',{name:chapter.title,exact:true})).toBeVisible()
+      const maps=dialog.getByRole('link',{name:/Google Maps/})
+      expect(new URL((await maps.getAttribute('href'))!).searchParams.get('query')).toBe(place.address)
+      if(ci>0)await expect(dialog.locator('.carried-clue')).toContainText(`${id}章${ci}项4`)
+      for(const [ai,action] of chapter.actions.entries()){
+        await expect(dialog.getByRole('textbox')).toHaveCount(1)
+        await expect(dialog.getByText(action.text,{exact:true})).toBeVisible()
+        if(ai<3)await expect(dialog.getByText(chapter.actions[ai+1].text,{exact:true})).toHaveCount(0)
+        await expect(dialog.getByText(chapter.clue,{exact:true})).toHaveCount(0)
+        await dialog.getByRole('textbox').fill(`${id}章${ci+1}项${ai+1}：资料观察，保留待核范围`)
+        await dialog.getByLabel('这条记录是',{exact:true}).selectOption('uncertain')
+        await dialog.getByRole('button',{name:/提交记录，/}).click()
+        await expect(dialog.locator('.answer-record')).toHaveCount(ai+1)
+        await expect(dialog.getByText(action.uncertainResponse,{exact:true})).toBeVisible()
+        if(ci===0&&ai===0){await page.reload();await page.getByRole('button',{name:'开启我的探索'}).click();await expect(dialog.locator('.answer-record')).toHaveCount(1)}
+      }
+      await expect(dialog.getByText(chapter.clue,{exact:true})).toBeVisible()
+      if(chapter.nextQuestId)await dialog.getByRole('button',{name:'带着线索，进入下一章'}).click()
+    }
+    await expect(dialog.locator('.adventure-ending')).toContainText(adventures[id].uncertainEnding)
+    await expect(dialog.locator('.ending-evidence')).toHaveCount(3)
+    expect(await dialog.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBeTruthy()
+  })
+}
 
 for(const id of guanzhongStoryIds){
   const place=places.find(p=>p.id===id)!,chapters=quests.filter(q=>q.placeId===id)

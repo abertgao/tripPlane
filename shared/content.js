@@ -1,21 +1,30 @@
 import {southAdventures} from './adventures-south.js'
 import {northAdventures} from './adventures-north.js'
+import {autumnAdventures} from './adventures-autumn.js'
 
-export const adventures = {...southAdventures, ...northAdventures}
+export const adventures = {...southAdventures, ...northAdventures, ...autumnAdventures}
 export const guanzhongStoryIds = ['famensi', 'qianling', 'maoling', 'yide']
+export const autumnNewPlaceIds = ['tongchuan-museum', 'hukou', 'nanniwan-wetland', 'baotashan']
+export const autumnReusedPlaceIds = ['yaowang', 'yaozhou', 'huangling']
+export const autumnDays = [
+  {date:'2026-09-30',title:'铜川 · 三份不同的证据',placeIds:['tongchuan-museum','yaowang','yaozhou'],labels:['新增 · 城市器物调查','已有 · 药王山名称已明确','已有 · 保留原进度'],route:'若住新区，可先铜川博物馆→药王山→耀州窑；住处、预约与交通不同可调序。三点并非步行邻点，不插入陈炉加线。',budget:'铜川馆60–90分钟，药王山1.5–2小时，耀州窑2–3小时；另留午餐、停车、转场与排队。',warning:'铜川博物馆常规09:00才开门，早到先早餐或休息；铜川馆与耀州窑均常规16:30停入。若上午延迟，缩短药王山或两馆取舍，不能因任务赶末班入馆。'},
+  {date:'2026-10-01',title:'黄陵—宜川—延安 · 别把折线当顺路',placeIds:['huangling','hukou','nanniwan-wetland'],labels:['已有校准 · 原黄陵建筑园区','新增 · 陕西侧壶口','新增 · 仅自然水土'],route:'黄帝陵→陕西宜川壶口→视余量决定南泥湾自然短停→延安。跨县折线，不是同城三点；不承诺直达时长。',budget:'黄帝陵2–3小时，壶口2–3小时，南泥湾45–75分钟：仅停留就约5–7小时，尚未计节假日交通和接驳。',warning:'高负荷候选，不建议三站都做深度任务。两主点完成后如晚到、拥堵或开放未核，取消南泥湾实地，不为凑齐赶夜路。壶口按陕西侧分时预约与当日水情复核。'},
+  {date:'2026-10-02',title:'延安 · 给城市一个视点',placeIds:['baotashan'],labels:['新增 · 仅古塔与地形'],route:'宝塔山选择已确认开放的外观短线，其余既定活动自行保留；本专题只覆盖这一段建筑与地形观察。',budget:'宝塔山60–90分钟含上下行和休息，预约、停车和其他活动另计。',warning:'未新增革命纪念馆、枣园、杨家岭、王家坪任务卡；本页不等于五站行程已覆盖或预约成功。登塔不是过关条件，不为取景挤掉下一站时间。'},
+  {date:'2026-10-03',title:'到榆林 · 抵达不等于继续加站',placeIds:['shuofang','shimao','erlang','hongjiannao'],labels:['已有候选 · 馆址仍待核','已有 · 神木高家堡，非市中心','已有候选 · 神木城区','已有 · 神木尔林兔'],route:'先按当日道路与住宿位置到达榆林。下列是既有市域候选池，不是当日四站路线；只到榆林市区则优先休整。',budget:'不预设市中心新增目的地；石峁、二郎山和红碱淖均需另外核算前往神木的交通与开放。',warning:'不能把“榆林·神木”分类理解为四点相邻。朔方博物馆地址尚未确认，不提供猜测导航；没有明确下一处目的地时不自动安排出城。'},
+]
 export const themes = ['全部', '遗址与石刻', '陶瓷与工艺', '寺窟与建筑', '古道与交通', '博物馆与生活', '河湖与地貌']
-export const regions = ['关中', '铜川', '黄陵·洛川', '富县·陕北', '榆林·神木', '鄂尔多斯', '河套·阴山', '阿拉善']
+export const regions = ['关中', '铜川', '黄陵·洛川', '富县·陕北', '延安·宜川', '榆林·神木', '鄂尔多斯', '河套·阴山', '阿拉善']
 const source = {yao:'https://www.tongchuan.gov.cn/resources/site/102/html/gk/zdgknr/ggwh/202310/823105.html',mao:'http://www.maoling.com/',road:'https://www.fuxian.gov.cn/zjfx/fxyx/1781230257093746690.html',shi:'https://you.ctrip.com/sight/shenmu2762/145190205.html'}
 /** @type {Array<[string,string,string,string,string,string,boolean,string,string,string,string,string]>} */
 const raw = [
 ['maoling','茂陵博物馆','关中','遗址与石刻','一块看似多余的石形，让动物轮廓重新有了分量。','陕西省兴平市南位镇茂陵博物馆',true,'真实场所搜索；当日预约、石刻展区及摄影规则以馆方公告为准',source.mao,'shimao','2–3小时','约2公里预算'],
 ['xianling','唐献陵','关中','遗址与石刻','一片原野，一道轮廓。先确认名称，再开始寻找。','',false,'三原方向候选；游客入口、停车与开放待核验','','grass','1–2小时','待核验'],
-['yaozhou','耀州窑博物馆','铜川','陶瓷与工艺','把视线从青釉的光泽，移向器物不被留意的边缘。','陕西省铜川市王益区黄堡镇新宜南路25号耀州窑博物馆',true,'常规周二至周日09:00–17:00；周一闭馆，16:30停入。9/28不排参馆',source.yao,'hero','2–3小时','约2公里'],
-['yaowang','药王山（候选）','铜川','寺窟与建筑','让建筑、崖壁与光线成为今天的线索。','',false,'用户所述药王谷是否为此处待确认；不自动替换','','grass','1.5–2小时','台阶与短线待核'],
+['yaozhou','耀州窑博物馆','铜川','陶瓷与工艺','漂亮与好用两张凭签，究竟谁能替一件器物签收？','陕西省铜川市王益区黄堡镇新宜南路25号耀州窑博物馆',true,'常规周二至周日09:00–17:00，16:30停入；9/30周三计划仍核当日公告，别把两馆与药王山当步行邻点',source.yao,'hero','2–3小时','约2公里预算'],
+['yaowang','药王山','铜川','寺窟与建筑','声音先到，是否就意味着人先走过那道门？','陕西省铜川市耀州区 药王山景区',true,'本次地点已明确为药王山，复用原候选卡；真实入口、台阶及9/30开放仍需核实，不进入封闭洞窟','https://www.tongchuan.gov.cn/resources/site/1/html/mltc/lyjq/202302/682384.html','grass','1.5–2小时','台阶与短线待核'],
 ['chenlu','陈炉古镇','铜川','陶瓷与工艺','从窑火走向街巷，看看一种手艺如何留在生活里。','',false,'与耀州窑为不同地点；停车、步行和开放待核','','hero','2小时','约2–3公里预算'],
 ['jianling','简陵','关中','遗址与石刻','在远望与近看之间，留下一页谨慎的观察。','',false,'富平庄里方向；保护范围、入口和路况待核','','shimao','1小时','待核验'],
 ['liugongquan','柳公权墓（候选）','铜川','遗址与石刻','不是所有地图上的标记，都已得到现场证据的回答。','',false,'耀州区有同名线索；位置与开放仍需确认','','grass','短停候选','待核验'],
-['huangling','黄陵建筑园区','黄陵·洛川','寺窟与建筑','沿着建筑的轴线，读一读空间怎样组织人的脚步。','',false,'黄陵县方向；真实入口、台阶与预约待核','','hero','2–3小时','约2–4公里预算'],
+['huangling','黄帝陵','黄陵·洛川','寺窟与建筑','一条最短穿园线，漏算了树荫、台阶与停下的人。','陕西省延安市黄陵县桥山 黄帝陵景区',true,'由原黄陵建筑园区校准，保留旧进度；轩辕庙与桥山上行范围、接驳、10/1预约和入口分别核实','https://en.shaanxi.gov.cn/skw/201707/t20170714_1595321.html','hero','2–3小时','建筑短线，山上另核'],
 ['loess','洛川黄土地质公园','黄陵·洛川','河湖与地貌','土不只有一种颜色，时间也不只有一种尺度。','',false,'谷段开放与雨后边坡条件待核；不进入未开放沟谷','','hero','1.5–2小时','约2公里预算'],
 ['fuxian','富县秦直道','富县·陕北','古道与交通','图上的直线，到了山里会变成怎样的问题？','',false,'张家湾方向，距县城约75公里；非顺路短停，普通车通行未核',source.road,'grass','替代全天主题','短线入口待核'],
 ['wanfo','米脂万佛洞（待消歧）','富县·陕北','寺窟与建筑','先把名字与真实地点对上，再让故事开始。','',false,'存在同名线索；暂不提供精确导航','','shimao','短停候选','待核验'],
@@ -36,8 +45,12 @@ const raw = [
 ['famensi','法门寺','关中','陶瓷与工艺','茶碾与茶罗之间，藏着让一场纸上茶会开始的动作。','陕西省宝鸡市扶风县法门镇 法门寺博物馆',true,'真实场所搜索；博物馆、寺院、地宫票务与当日开放分别核验，馆藏不等于在展','https://sfzxx.nwu.edu.cn/info/1018/1020.htm','hero','独立半日','馆内短线，接驳另核'],
 ['qianling','乾陵','关中','遗址与石刻','一只带翼的石兽、一段留白的路、一道远山，让剪影重新有前后。','陕西省咸阳市乾县 乾陵景区',true,'景区地名搜索不等于游客入口；核验神道开放与景交，主陵不安排地宫探访','https://www.shanxiqianling.com/','shimao','2–3小时','神道短线，按体力取舍'],
 ['yide','懿德太子墓','关中','寺窟与建筑','墙上的门与脚下的路，是两层不能混用的地图。','陕西省咸阳市乾县 懿德太子墓',true,'独立墓区，非乾陵主陵或永泰墓入口；地下通道、壁画原件或复制、摄影要求须当天核实','https://www.shanxiqianling.com/about/535.html?column_id=0','shimao','1.5–2小时','地下有坡道，开放另核'],
+['tongchuan-museum','铜川博物馆','铜川','博物馆与生活','一份虚构货簿，将制造、使用与发现误写在同一个地址里。','陕西省铜川市新区长青南路与朝阳路交汇处 铜川博物馆',true,'常规09:00–17:00、16:30停入，周一闭馆；9/30早到不等于提前开门，预约证件及当日公告另核','https://www.tongchuan.gov.cn/resources/site/102/html/gk/zdgknr/ggwh/202310/823104.html','hero','60–90分钟短线','馆内一段展陈'],
+['hukou','壶口瀑布（陕西侧）','延安·宜川','河湖与地貌','两张相矛盾的河道草图，少写了同一件事：你站在哪里。','陕西省延安市宜川县壶口镇 陕西黄河壶口瀑布景区',true,'陕西侧场所搜索；10/1分时票、景交、开放和水情须当天核实，不能照搬五一公告时刻或山西侧规则','https://wlj.yanan.gov.cn/zjya/ggfw/2050792323769466881.html','lake','2–3小时预算','正规观景短线'],
+['nanniwan-wetland','南泥湾（湿地与水土）','延安·宜川','河湖与地貌','一格没有涂绿的谷地，能不能只凭外观就算作一块田？','陕西省延安市宝塔区南泥湾镇 南泥湾国家湿地公园',true,'仅自然水土专题；名称可检索不代表湿地全域开放，公共入口及季节景观待核，不入田或保护核心区','https://lyj.yanan.gov.cn/stkjzl/stzl/1574754745183170561.html','grass','45–75分钟可选','已开放公共观察位'],
+['baotashan','宝塔山（古塔与地形）','延安·宜川','寺窟与建筑','古塔没有移动，河谷为何在两张城景图里换了位置？','陕西省延安市宝塔区 宝塔山景区',true,'仅古塔与地形专题；入园、登塔和观光车分别核验，不代表覆盖其他纪念场馆；台阶和当日短线待核','https://www.yanan.gov.cn/gk/fdzdgknr/shgy/wtly/yzya/zmjd/1570765644759146498.html','shimao','60–90分钟短线','登塔不是必做'],
 ]
-export const places = raw.map(([id,name,region,theme,summary,address,verified,status,sourceUrl,image,duration,walking]) => ({id,name,region,theme,summary,address,verified,status,sourceUrl,sourceCheckedAt:guanzhongStoryIds.includes(id)?'2026-09-28':'2026-09-26',image:`/images/${image}.jpg`,duration,walking,questIds:/** @type {string[]} */([])}))
+export const places = raw.map(([id,name,region,theme,summary,address,verified,status,sourceUrl,image,duration,walking]) => ({id,name,region,theme,summary,address,verified,status,sourceUrl,sourceCheckedAt:[...guanzhongStoryIds,...autumnNewPlaceIds,...autumnReusedPlaceIds].includes(id)?'2026-09-28':'2026-09-26',image:`/images/${image}.jpg`,duration,walking,questIds:/** @type {string[]} */([])}))
 export const legacyQuests = []
 function add(placeId,title,scene,texts,clue) { const id = `${placeId}-${legacyQuests.filter(q=>q.placeId===placeId).length+1}`; legacyQuests.push({id,placeId,title,npc:'许青 · 虚构的路书装帧师',scene,actions:texts.map((text,i)=>({id:`${id}-a${i+1}`,text})),clue,nextQuestId:null}); return id }
 add('yaozhou','页边的那道弧','许青把一页画着弧线的路书发来：“我一直以为这是河道。可旁边只写着——近一点。”这次，先不猜地图。',['在允许参观的展区，选两件轮廓相近的器物，看看展牌记载的年代或用途。','换一个允许停留的观看角度，用自己的话记住一条轮廓；允许拍照时才拍摄。','记下一条展牌来源。外形相似但年代不同，也是一条值得保存的发现。'],'轮廓相似，不意味着同一来历。许青决定把两页先分开放。')

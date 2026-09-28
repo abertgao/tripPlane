@@ -5,6 +5,7 @@ import {journeyStateSchema, STATE_MAX_BYTES, journalExportSchema} from '../../sh
 import {submitAnswer} from '../../shared/progress.js'
 import {places, quests} from '../../shared/content.js'
 import {api, ApiError, setCsrf} from './api'
+import {appendRandomPlaces, randomSelectionSchema, type RandomSelection} from './random-explore.js'
 
 export type JourneyState = z.infer<typeof journeyStateSchema>
 export type Journey = {id: string; revision: number; state: JourneyState; scope: string; updatedAt: string; remoteId?: string; dirty: boolean; operationId: string; epoch: string; deleted?: boolean}
@@ -21,6 +22,7 @@ let snapshot = {journeys: [] as Journey[], current: null as Journey | null, sess
 const listeners = new Set<() => void>()
 let started = false
 let identity = 0
+let journeyGeneration = 0
 let scope = 'guest'
 let syncing = false
 let operations = Promise.resolve<unknown>(undefined)
@@ -28,7 +30,10 @@ const pending = new Map<string, {state: JourneyState; operationId: string; scope
 const answerSubmissions = new Set<string>()
 let autosync: ReturnType<typeof setTimeout> | undefined
 const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('shanhe-identity') : null
-function emit(patch: Partial<typeof snapshot>) { snapshot = {...snapshot, ...patch}; listeners.forEach(fn => fn()) }
+function emit(patch: Partial<typeof snapshot>) {
+  if ('current' in patch && patch.current?.id !== snapshot.current?.id) journeyGeneration++
+  snapshot = {...snapshot, ...patch}; listeners.forEach(fn => fn())
+}
 function fail(error: unknown) { emit({error: error instanceof z.ZodError ? '记录格式、顺序或容量不符合要求，请检查后重试' : error instanceof Error ? error.message : '操作未完成，请重试', status: '未能完成，请查看提示'}) }
 function now() { return new Date().toISOString() }
 function uuid() {
@@ -150,7 +155,52 @@ async function createJourney(name = '新的山河行记') {
     return row
   })
 }
-async function selectJourney(id: string) { emit({checkpoints: []}); await reload(id) }
+async function selectJourney(id: string) { journeyGeneration++; emit({checkpoints: []}); await reload(id) }
+const explorationContextSchema = z.object({
+  identity: z.number().int().nonnegative(), scope: z.string().min(1).max(80), epoch: z.string().max(128),
+  journeyId: z.string().uuid().nullable(), generation: z.number().int().nonnegative(),
+}).strict()
+export type ExplorationContext = z.infer<typeof explorationContextSchema>
+function getExplorationContext(): ExplorationContext {
+  return {identity, scope, epoch: snapshot.session.storageEpoch, journeyId: snapshot.current?.id || null, generation: journeyGeneration}
+}
+async function appendExploration(expected: ExplorationContext, selection: RandomSelection): Promise<{saved: boolean; addedCount: number}> {
+  const rejected = {saved: false, addedCount: 0}
+  const parsedContext = explorationContextSchema.safeParse(expected), parsedSelection = randomSelectionSchema.safeParse(selection)
+  if (!parsedContext.success || !parsedSelection.success) return rejected
+  const context = parsedContext.data, request = parsedSelection.data, a = actor(), id = context.journeyId
+  const stillCurrent = () => valid(a) && context.identity === identity && context.scope === scope
+    && context.epoch === snapshot.session.storageEpoch && context.generation === journeyGeneration && snapshot.current?.id === id
+  if (!id || !stillCurrent() || answerSubmissions.has(id) || pending.has(id)) return rejected
+  answerSubmissions.add(id)
+  try {
+    const result = await serialize(async () => {
+      try {
+        if (!stillCurrent()) return rejected
+        let addedCount = 0
+        await db.transaction('rw', db.journeys, async () => {
+          const row = await db.journeys.get(id)
+          if (!stillCurrent() || !row || row.scope !== a.scope || row.deleted || pending.has(id)
+            || (row.epoch && row.epoch !== a.epoch)) throw new Error('EXPLORATION_CONTEXT_CHANGED')
+          const merged = appendRandomPlaces(row.state, request, now())
+          addedCount = merged.addedCount
+          if (addedCount) await db.journeys.put({...row, state: merged.state, updatedAt: merged.state.updatedAt, dirty: true, operationId: uuid()})
+          if (!stillCurrent()) throw new Error('EXPLORATION_CONTEXT_CHANGED')
+        })
+        if (!stillCurrent()) return rejected
+        await reload()
+        if (!stillCurrent()) return rejected
+        emit({status: a.userId ? '已保存本机 · 待同步' : '已保存到本机', error: ''})
+        scheduleSync()
+        return {saved: true, addedCount}
+      } catch {
+        if (stillCurrent()) emit({status: '随机追加未完成 · 原记录保留', error: '随机追加未完成，请检查存储容量、跳过记录或账号状态后重试'})
+        return rejected
+      }
+    })
+    return result?.saved && stillCurrent() ? result : rejected
+  } finally { answerSubmissions.delete(id) }
+}
 async function updateState(patch: Partial<JourneyState> | ((state: JourneyState) => Partial<JourneyState>)) {
   const a = actor(), current = snapshot.current
   if (!current) { fail(new Error('请先创建旅程')); return false }
@@ -414,7 +464,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('pageshow', () => { void refreshCapabilities() })
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') void refreshCapabilities() })
 }
-const actions = {selectJourney, createJourney, updateState, submitActionAnswer, deleteJourney, exportJourney, importJourney, createCheckpoint, loadCheckpoints, restoreCheckpoint, sync, refreshSession, refreshCapabilities, resolveConflict, clearError: () => emit({error: ''})}
+const actions = {selectJourney, createJourney, updateState, submitActionAnswer, getExplorationContext, appendExploration, deleteJourney, exportJourney, importJourney, createCheckpoint, loadCheckpoints, restoreCheckpoint, sync, refreshSession, refreshCapabilities, resolveConflict, clearError: () => emit({error: ''})}
 export function useJournal() {
   const state = useSyncExternalStore(fn => {listeners.add(fn); return () => listeners.delete(fn)}, () => snapshot)
   if (!started) { started = true; queueMicrotask(() => void init()) }

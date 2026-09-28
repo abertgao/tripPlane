@@ -10,7 +10,7 @@ import {journeyStateSchema,journeyStateWriteSchema,journalExportSchema,STATE_MAX
 import {submitAnswer,canOpenQuest,nextQuestForPlace,isQuestComplete,exploredPlaceIds,MAX_ANSWER_LENGTH} from '../shared/progress.js'
 import {quests,places,legacyQuests} from '../shared/content.js'
 const state=()=>({schemaVersion:1,contentVersion:'shanhe-2026-v1',name:'不传给模型的私人旅程名',startDate:'2026-09-27',days:11,selectedPlaceIds:['maoling','yaozhou','fuxian'],skippedPlaceIds:[],completedActionIds:[],notes:[{id:randomUUID(),placeId:'yaozhou',text:'PRIVATE_NOTE_DO_NOT_SEND',createdAt:new Date().toISOString()}],activeQuestId:'yaozhou-1',ended:false,updatedAt:new Date().toISOString()})
-test('全部28地各自逐行动逐章推进，完成可回看且从不依赖旧勾选解锁',()=>{
+test('全部地点各自逐行动逐章推进，完成可回看且从不依赖旧勾选解锁',()=>{
  const source=state(),before=JSON.stringify(source)
  let progress=journeyStateSchema.parse(source)
  assert.equal(MAX_ANSWER_LENGTH,1000)
