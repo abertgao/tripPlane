@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test'
-import {adventures,places,quests} from '../shared/content.js'
+import {adventures,places,quests,guanzhongStoryIds} from '../shared/content.js'
 
 test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block',launchOptions:{chromiumSandbox:true}})
 const base=process.env.SHANHE_TEST_URL||'http://127.0.0.1:8812'
@@ -11,6 +11,70 @@ test.beforeEach(async({context})=>{
     if(url.pathname==='/api/v1/capabilities'){await route.fulfill({json:{accounts:false,ai:false}});return}
     await route.continue()
   })
+})
+
+for(const id of guanzhongStoryIds){
+  const place=places.find(p=>p.id===id)!,chapters=quests.filter(q=>q.placeId===id)
+  test(`关中四地专题入口、刷新续玩与三章收束：${place.name}`,async({page})=>{
+    test.setTimeout(60000)
+    await page.goto(base)
+    await expect(page.getByRole('button',{name:'开启我的探索'})).toBeEnabled()
+    const collection=page.getByRole('region',{name:'关中四地任务卡'})
+    await expect(collection.locator('.place-card')).toHaveCount(4)
+    await collection.getByRole('button',{name:`查看${place.name}的故事`}).click()
+    const dialog=page.getByRole('dialog')
+    await expect(dialog.getByText(`资料初核：${place.sourceCheckedAt}`,{exact:false})).toBeVisible()
+    await expect(dialog.getByRole('heading',{name:adventures[id].title,exact:true})).toBeVisible()
+    await expect(dialog.getByRole('button',{name:new RegExp(chapters[1].title)})).toBeDisabled()
+    await dialog.getByRole('button',{name:new RegExp(chapters[0].title)}).click()
+    for(const [chapterIndex,chapter] of chapters.entries()){
+      await expect(dialog.getByRole('heading',{name:chapter.title,exact:true})).toBeVisible()
+      const maps=dialog.getByRole('link',{name:/Google Maps/})
+      const address=new URL((await maps.getAttribute('href'))!).searchParams.get('query')
+      expect(address).toBe(place.address)
+      if(chapterIndex>0)await expect(dialog.locator('.carried-clue')).toContainText(`${place.name}第${chapterIndex}章第${chapters[chapterIndex-1].actions.length}项记录`)
+      for(const [index,action] of chapter.actions.entries()){
+        await expect(dialog.getByRole('textbox')).toHaveCount(1)
+        await expect(dialog.getByText(action.text,{exact:true})).toBeVisible()
+        await expect(dialog.getByText(chapter.clue,{exact:true})).toHaveCount(0)
+        if(index+1<chapter.actions.length)await expect(dialog.getByText(chapter.actions[index+1].text,{exact:true})).toHaveCount(0)
+        await expect(dialog.getByRole('button',{name:/提交记录，/})).toBeDisabled()
+        await dialog.getByRole('textbox').fill(`${place.name}第${chapterIndex+1}章第${index+1}项记录`)
+        if(chapterIndex===0&&index===0)await dialog.getByLabel('这条记录是',{exact:true}).selectOption('uncertain')
+        await dialog.getByRole('button',{name:/提交记录，/}).click()
+        await expect(dialog.locator('.answer-record')).toHaveCount(index+1)
+        if(chapterIndex===0&&index===0){
+          await expect(dialog.getByText(action.uncertainResponse,{exact:true})).toBeVisible()
+          await page.reload()
+          await page.getByRole('button',{name:'开启我的探索'}).click()
+          await expect(dialog.locator('.answer-record')).toHaveCount(1)
+        }
+      }
+      await expect(dialog.getByText(chapter.clue,{exact:true})).toBeVisible()
+      if(chapter.nextQuestId)await dialog.getByRole('button',{name:'带着线索，进入下一章'}).click()
+    }
+    await expect(dialog.locator('.adventure-ending')).toContainText(adventures[id].uncertainEnding)
+    await expect(dialog.locator('.ending-evidence')).toHaveCount(3)
+    expect(await dialog.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBeTruthy()
+  })
+}
+
+test('关中四地可在候选日、故事标题和主题兴趣搜索中找到',async({page})=>{
+  await page.goto(base+'/#route')
+  const day=page.locator('#day-1')
+  for(const id of guanzhongStoryIds)await expect(day.getByRole('button',{name:new RegExp(places.find(p=>p.id===id)!.name)})).toBeVisible()
+  await expect(day).toContainText('不将四地串成一天必走路线')
+  const search=page.getByRole('textbox',{name:'搜索地点'})
+  await search.fill('  迟了一千年的茶会  ')
+  await expect(page.locator('.place-card')).toHaveCount(1)
+  await expect(page.getByRole('button',{name:'查看法门寺的故事'})).toBeVisible()
+  await search.fill('壁画')
+  await page.getByRole('button',{name:'寺窟与建筑',exact:true}).click()
+  await expect(page.getByRole('button',{name:'查看懿德太子墓的故事'})).toBeVisible()
+  await page.getByRole('button',{name:'全部',exact:true}).click()
+  await search.fill('茂陵')
+  await expect(page.locator('.place-card')).toHaveCount(1)
+  await expect(page.getByRole('button',{name:'查看茂陵博物馆的故事'})).toBeVisible()
 })
 
 test('章节锁定、逐项调查、前章承接和独立故事结局',async({page})=>{

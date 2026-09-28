@@ -2,12 +2,13 @@ import {southAdventures} from './adventures-south.js'
 import {northAdventures} from './adventures-north.js'
 
 export const adventures = {...southAdventures, ...northAdventures}
+export const guanzhongStoryIds = ['famensi', 'qianling', 'maoling', 'yide']
 export const themes = ['全部', '遗址与石刻', '陶瓷与工艺', '寺窟与建筑', '古道与交通', '博物馆与生活', '河湖与地貌']
 export const regions = ['关中', '铜川', '黄陵·洛川', '富县·陕北', '榆林·神木', '鄂尔多斯', '河套·阴山', '阿拉善']
 const source = {yao:'https://www.tongchuan.gov.cn/resources/site/102/html/gk/zdgknr/ggwh/202310/823105.html',mao:'http://www.maoling.com/',road:'https://www.fuxian.gov.cn/zjfx/fxyx/1781230257093746690.html',shi:'https://you.ctrip.com/sight/shenmu2762/145190205.html'}
 /** @type {Array<[string,string,string,string,string,string,boolean,string,string,string,string,string]>} */
 const raw = [
-['maoling','茂陵博物馆','关中','遗址与石刻','在石刻的轮廓里，寻找时间留下的分量。','陕西省兴平市南位镇茂陵博物馆',true,'官网常规08:30–18:00；假期预约请再确认',source.mao,'shimao','2–3小时','约2公里'],
+['maoling','茂陵博物馆','关中','遗址与石刻','一块看似多余的石形，让动物轮廓重新有了分量。','陕西省兴平市南位镇茂陵博物馆',true,'真实场所搜索；当日预约、石刻展区及摄影规则以馆方公告为准',source.mao,'shimao','2–3小时','约2公里预算'],
 ['xianling','唐献陵','关中','遗址与石刻','一片原野，一道轮廓。先确认名称，再开始寻找。','',false,'三原方向候选；游客入口、停车与开放待核验','','grass','1–2小时','待核验'],
 ['yaozhou','耀州窑博物馆','铜川','陶瓷与工艺','把视线从青釉的光泽，移向器物不被留意的边缘。','陕西省铜川市王益区黄堡镇新宜南路25号耀州窑博物馆',true,'常规周二至周日09:00–17:00；周一闭馆，16:30停入。9/28不排参馆',source.yao,'hero','2–3小时','约2公里'],
 ['yaowang','药王山（候选）','铜川','寺窟与建筑','让建筑、崖壁与光线成为今天的线索。','',false,'用户所述药王谷是否为此处待确认；不自动替换','','grass','1.5–2小时','台阶与短线待核'],
@@ -32,8 +33,11 @@ const raw = [
 ['jilusai','鸡鹿塞','河套·阴山','古道与交通','在磴口的山口，寻找通道与地形的关系。','',false,'磴口沙金套海方向；与高阙塞分线，不强行一天全覆盖','','grass','1–2小时','待核验'],
 ['aguimiao','阿贵庙','河套·阴山','寺窟与建筑','把脚步放慢，不必走到最高处才能读懂一座建筑。','',false,'磴口方向；洞窟阶梯不是必做项，开放及天气待核','','shimao','1.5–2小时','约2公里预算'],
 ['canyon','西部梦幻峡谷','阿拉善','河湖与地貌','如果还有时间，就让峡谷成为额外的一页。','',false,'敖伦布拉格方向；路况、车型、景交、往返步行需核实，非必去终点','','hero','可选延伸日','短线待核'],
+['famensi','法门寺','关中','陶瓷与工艺','茶碾与茶罗之间，藏着让一场纸上茶会开始的动作。','陕西省宝鸡市扶风县法门镇 法门寺博物馆',true,'真实场所搜索；博物馆、寺院、地宫票务与当日开放分别核验，馆藏不等于在展','https://sfzxx.nwu.edu.cn/info/1018/1020.htm','hero','独立半日','馆内短线，接驳另核'],
+['qianling','乾陵','关中','遗址与石刻','一只带翼的石兽、一段留白的路、一道远山，让剪影重新有前后。','陕西省咸阳市乾县 乾陵景区',true,'景区地名搜索不等于游客入口；核验神道开放与景交，主陵不安排地宫探访','https://www.shanxiqianling.com/','shimao','2–3小时','神道短线，按体力取舍'],
+['yide','懿德太子墓','关中','寺窟与建筑','墙上的门与脚下的路，是两层不能混用的地图。','陕西省咸阳市乾县 懿德太子墓',true,'独立墓区，非乾陵主陵或永泰墓入口；地下通道、壁画原件或复制、摄影要求须当天核实','https://www.shanxiqianling.com/about/535.html?column_id=0','shimao','1.5–2小时','地下有坡道，开放另核'],
 ]
-export const places = raw.map(([id,name,region,theme,summary,address,verified,status,sourceUrl,image,duration,walking]) => ({id,name,region,theme,summary,address,verified,status,sourceUrl,image:`/images/${image}.jpg`,duration,walking,questIds:/** @type {string[]} */([])}))
+export const places = raw.map(([id,name,region,theme,summary,address,verified,status,sourceUrl,image,duration,walking]) => ({id,name,region,theme,summary,address,verified,status,sourceUrl,sourceCheckedAt:guanzhongStoryIds.includes(id)?'2026-09-28':'2026-09-26',image:`/images/${image}.jpg`,duration,walking,questIds:/** @type {string[]} */([])}))
 export const legacyQuests = []
 function add(placeId,title,scene,texts,clue) { const id = `${placeId}-${legacyQuests.filter(q=>q.placeId===placeId).length+1}`; legacyQuests.push({id,placeId,title,npc:'许青 · 虚构的路书装帧师',scene,actions:texts.map((text,i)=>({id:`${id}-a${i+1}`,text})),clue,nextQuestId:null}); return id }
 add('yaozhou','页边的那道弧','许青把一页画着弧线的路书发来：“我一直以为这是河道。可旁边只写着——近一点。”这次，先不猜地图。',['在允许参观的展区，选两件轮廓相近的器物，看看展牌记载的年代或用途。','换一个允许停留的观看角度，用自己的话记住一条轮廓；允许拍照时才拍摄。','记下一条展牌来源。外形相似但年代不同，也是一条值得保存的发现。'],'轮廓相似，不意味着同一来历。许青决定把两页先分开放。')
@@ -64,7 +68,7 @@ for (const place of places) {
 }
 /** @type {Array<[number,string,string,string[],string,string,string]>} */
 const dayRows = [
-[1,'关中','从一块石头开始',['maoling','xianling'],'2–4小时','铜川','茂陵与献陵二选一，不必两处都去。'],
+[1,'关中','在关中，选一条主线',['maoling','qianling','yide','famensi','xianling'],'按所选支线另核','按支线安排，北上可选铜川','茂陵、法门寺、乾陵主题择一，唐献陵仍为待核替代。法门寺预留独立半日；乾陵与懿德墓仅在开放、交通和体力允许时组合，晚到则二选一。不将四地串成一天必走路线。'],
 [2,'铜川','把今天留给慢行',['yaowang','jianling','liugongquan'],'0–2小时','铜川','9/28周一，耀州窑按常规闭馆处理。可休息，不补景点。'],
 [3,'铜川','火与手的记忆',['yaozhou','chenlu'],'2–4小时','黄陵','优先深看一个区域。陈炉是替代，不是必加。'],
 [4,'黄陵·洛川','走进土地的层次',['huangling','loess','fuxian'],'2–4小时','富县或延安','富县直道只能替代全天安排，未核验入口则不去。'],

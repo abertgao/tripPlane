@@ -1,3 +1,5 @@
+.guanzhong-stories{margin:30px 0}.guanzhong-stories .place-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.guanzhong-stories>.form-help{margin:0 0 18px}.guanzhong-stories .place-card{min-width:0}
+@media(max-width:760px){.guanzhong-stories .place-grid{grid-template-columns:minmax(0,1fr)}}
 .adventure-overview{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
 .adventure-overview h3{font:500 25px/1.6 var(--serif);margin:9px 0 12px;color:var(--ink)}
 .adventure-premise{font-size:14px;line-height:1.95;color:#53674c}
