@@ -12,5 +12,6 @@ dist
 *.db-*
 .runtime/
 .backups/
+.codebuddy/
 playwright-report/
 test-results/

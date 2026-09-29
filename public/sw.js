@@ -1,4 +1,4 @@
-const CACHE = 'shanhe-public-mobile-20260928-autumn-v9'
+const CACHE = 'shanhe-public-mobile-20260929-region-v10'
 const CORE = ['/', '/index.html', '/favicon.svg', '/manifest.webmanifest', '/images/hero.jpg', '/images/shimao.jpg', '/images/lake.jpg', '/images/grass.jpg']
 self.addEventListener('install', event => { event.waitUntil((async()=>{
   const cache=await caches.open(CACHE)

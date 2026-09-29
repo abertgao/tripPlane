@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test'
-import {adventures,places,quests,guanzhongStoryIds,autumnDays,autumnNewPlaceIds} from '../shared/content.js'
+import {adventures,places,quests,regions,guanzhongStoryIds,autumnDays,autumnNewPlaceIds} from '../shared/content.js'
 
 test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block',launchOptions:{chromiumSandbox:true}})
 const base=process.env.SHANHE_TEST_URL||'http://127.0.0.1:8812'
@@ -23,6 +23,8 @@ test('秋日日期专题保留覆盖边界、不自动收藏，搜索仍服从�
   }))
   const before=await getState()
   const section=page.getByRole('region',{name:'接下来四天的故事',exact:true})
+  await expect(section.locator('.autumn-day')).toHaveCount(0)
+  await section.getByRole('button',{name:'展开四天安排',exact:true}).click()
   await expect(section.locator('.autumn-day')).toHaveCount(4)
   for(const day of autumnDays){
     const daily=section.getByRole('region',{name:`${day.date}故事安排`})
@@ -38,7 +40,8 @@ test('秋日日期专题保留覆盖边界、不自动收藏，搜索仍服从�
   await dialog.getByRole('button',{name:'返回上一层'}).click()
   expect(await getState()).toEqual(before)
   await page.getByRole('navigation',{name:'移动端导航'}).getByRole('button',{name:'路线',exact:true}).click()
-  await expect(section).toBeVisible()
+  await expect(section).toHaveCount(0)
+  await expect(page.locator('.region-group').first()).toBeVisible()
   await page.getByRole('textbox',{name:'搜索地点'}).fill('第三只箱子')
   await expect(section).toHaveCount(0)
   await expect(page.getByRole('button',{name:'查看铜川博物馆的故事'})).toBeVisible()
@@ -56,6 +59,7 @@ for(const id of autumnNewPlaceIds){
     test.setTimeout(60000)
     await page.goto(base)
     await expect(page.getByRole('button',{name:'开启我的探索'})).toBeEnabled()
+    await page.getByRole('button',{name:'展开四天安排',exact:true}).click()
     await page.getByRole('button',{name:`展开${day.date}的${place.name}`,exact:true}).click()
     const dialog=page.getByRole('dialog')
     await expect(dialog.getByRole('button',{name:new RegExp(chapters[1].title)})).toBeDisabled()
@@ -134,6 +138,7 @@ for(const id of guanzhongStoryIds){
 
 test('关中四地可在候选日、故事标题和主题兴趣搜索中找到',async({page})=>{
   await page.goto(base+'/#route')
+  await page.getByRole('group',{name:'路线展示方式'}).getByRole('button',{name:'按行程',exact:true}).click()
   const day=page.locator('#day-1')
   for(const id of guanzhongStoryIds)await expect(day.getByRole('button',{name:new RegExp(places.find(p=>p.id===id)!.name)})).toBeVisible()
   await expect(day).toContainText('不将四地串成一天必走路线')
@@ -148,6 +153,32 @@ test('关中四地可在候选日、故事标题和主题兴趣搜索中找到',
   await search.fill('茂陵')
   await expect(page.locator('.place-card')).toHaveCount(1)
   await expect(page.getByRole('button',{name:'查看茂陵博物馆的故事'})).toBeVisible()
+})
+
+test('首页四天专题默认收起，展开后可查看四天安排',async({page})=>{
+  await page.goto(base)
+  const section=page.getByRole('region',{name:'接下来四天的故事',exact:true})
+  const toggle=section.getByRole('button',{name:'展开四天安排',exact:true})
+  await expect(toggle).toHaveAttribute('aria-expanded','false')
+  await expect(section.locator('.autumn-day')).toHaveCount(0)
+  await toggle.click()
+  await expect(section.locator('.autumn-day')).toHaveCount(4)
+  await expect(section.getByRole('button',{name:'收起四天安排',exact:true})).toHaveAttribute('aria-expanded','true')
+  await section.getByRole('button',{name:'收起四天安排',exact:true}).click()
+  await expect(section.locator('.autumn-day')).toHaveCount(0)
+})
+
+test('路线页默认按地区分组，可切回11天行程，秋日新增4站并入对应地区',async({page})=>{
+  await page.goto(base+'/#route')
+  const groups=page.locator('.region-group')
+  await expect(groups).toHaveCount(regions.filter(name=>places.some(p=>p.region===name)).length)
+  const tongchuan=page.getByRole('region',{name:'铜川地区候选'})
+  await expect(tongchuan.getByRole('button',{name:'查看铜川博物馆的故事'})).toBeVisible()
+  const yanan=page.getByRole('region',{name:'延安·宜川地区候选'})
+  for(const id of ['hukou','nanniwan-wetland','baotashan'])await expect(yanan.getByRole('button',{name:`查看${places.find(p=>p.id===id)!.name}的故事`})).toBeVisible()
+  await page.getByRole('group',{name:'路线展示方式'}).getByRole('button',{name:'按行程',exact:true}).click()
+  await expect(page.locator('#day-1')).toContainText('不将四地串成一天必走路线')
+  await expect(groups).toHaveCount(0)
 })
 
 test('章节锁定、逐项调查、前章承接和独立故事结局',async({page})=>{
